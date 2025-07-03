@@ -26,6 +26,11 @@ export interface MongoDbConfig {
   collection?: string;
 }
 
+export interface LoggingConfig {
+  enabled?: boolean;
+  pino?: Record<string, any>;
+}
+
 export interface A3tConfig {
   db?: {
     mongodb?: MongoDbConfig;
@@ -37,6 +42,7 @@ export interface A3tConfig {
     backend?: FsBackend;
   };
   context?: A3tContext;
+  logging?: LoggingConfig;
 }
 
 export interface CacheStats {
@@ -70,6 +76,10 @@ export interface A3t {
   // Cache management
   clearCache(): void;
   getCacheStats(): CacheStats;
+  
+  // Logging
+  initLogging(config?: LoggingConfig): void;
+  getLogger(): any;
 }
 
 declare const a3t: A3t;

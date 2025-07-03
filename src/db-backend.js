@@ -3,6 +3,8 @@
  * Default implementation uses MongoDB, but can be replaced with custom backend
  */
 
+const { logBackend } = require('./logging');
+
 let dbBackend = null;
 let mongoClient = null;
 
@@ -21,9 +23,11 @@ class MongoDbBackend {
       const db = this.client.db(this.databaseName);
       const collection = db.collection(this.collectionName);
       const result = await collection.findOne(query);
-      return result ? result.value : null;
+      const value = result ? result.value : null;
+      logBackend('mongodb', 'findAsset', JSON.stringify(query), value !== null);
+      return value;
     } catch (error) {
-      console.warn('a3t: Database query failed:', error.message);
+      logBackend('mongodb', 'findAsset', JSON.stringify(query), false, error);
       return null;
     }
   }

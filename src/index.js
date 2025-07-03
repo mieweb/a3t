@@ -8,6 +8,7 @@ const { clearCache, getCacheStats } = require('./cache');
 const { setDbBackend, setMongoDbBackend, getDbBackend } = require('./db-backend');
 const { setFsBackend, setNodeFsBackend, setMeteorAssetsBackend, autoDetectFsBackend, getFsBackend } = require('./fs-backend');
 const { resolveAsset, resolveAssets } = require('./resolver');
+const { initLogging, getLogger } = require('./logging');
 
 /**
  * Get an asset using the a3t hierarchical resolution
@@ -59,8 +60,19 @@ async function getMultiple(keys, defaults = {}, contextOverride = {}) {
  * @param {Object} config.db - Database configuration
  * @param {Object} config.fs - Filesystem configuration
  * @param {Object} config.context - Initial context
+ * @param {Object} config.logging - Logging configuration
+ * @param {boolean} config.logging.enabled - Whether logging is enabled (default: true)
+ * @param {Object} config.logging.pino - Pino logger configuration options
  */
 function init(config = {}) {
+  // Initialize logging first
+  if (config.logging) {
+    initLogging(config.logging);
+  } else {
+    // Default logging configuration - enabled by default
+    initLogging({ enabled: true });
+  }
+
   // Set up database backend if provided
   if (config.db) {
     if (config.db.mongodb) {
@@ -130,6 +142,10 @@ const a3t = {
   // Cache management
   clearCache,
   getCacheStats,
+  
+  // Logging
+  initLogging,
+  getLogger,
 };
 
 // Auto-initialize with default settings

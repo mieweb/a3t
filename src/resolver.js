@@ -7,6 +7,7 @@ const { getCacheKey, getDbQueryHierarchy } = require('./context');
 const { getCached, setCached } = require('./cache');
 const { queryDatabase } = require('./db-backend');
 const { readFromFilesystem } = require('./fs-backend');
+const { logResolution, logCache } = require('./logging');
 
 /**
  * Resolve asset using the a3t hierarchy
@@ -23,8 +24,11 @@ async function resolveAsset(key, defaultValue = undefined, contextOverride = {},
   // Check cache first
   const cached = getCached(cacheKey);
   if (cached !== undefined) {
+    logCache('hit', key, contextOverride, true);
     return cached.found ? cached.value : defaultValue;
   }
+  
+  logCache('miss', key, contextOverride, false);
   
   try {
     // 1. Database overrides (most to least specific)
@@ -33,6 +37,7 @@ async function resolveAsset(key, defaultValue = undefined, contextOverride = {},
     
     if (dbResult !== null && dbResult !== undefined) {
       // Found in database - cache and return
+      logResolution('database', key, contextOverride, dbResult);
       setCached(cacheKey, true, dbResult);
       return dbResult;
     }
@@ -42,6 +47,7 @@ async function resolveAsset(key, defaultValue = undefined, contextOverride = {},
     
     if (fsResult !== null && fsResult !== undefined) {
       // Found in filesystem - cache and return
+      logResolution('filesystem', key, contextOverride, fsResult);
       setCached(cacheKey, true, fsResult);
       return fsResult;
     }
@@ -49,16 +55,18 @@ async function resolveAsset(key, defaultValue = undefined, contextOverride = {},
     // 3. Inline default
     if (defaultValue !== undefined) {
       // Cache the default value result
+      logResolution('default', key, contextOverride, defaultValue);
       setCached(cacheKey, true, defaultValue);
       return defaultValue;
     }
     
     // 4. Not found - cache the miss
+    logResolution('not_found', key, contextOverride, undefined);
     setCached(cacheKey, false, undefined);
     return undefined;
     
   } catch (error) {
-    console.warn('a3t: Asset resolution error:', error.message);
+    logResolution('error', key, contextOverride, error);
     
     // On error, try to return default or undefined
     if (defaultValue !== undefined) {

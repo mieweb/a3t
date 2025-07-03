@@ -6,8 +6,13 @@
   "types": "src/index.d.ts",
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "lint": "echo 'No linting configured yet'",
-    "build": "echo 'No build step required'"
+    "test:coverage": "node --test --experimental-test-coverage tests/*.test.js",
+    "test:mongodb": "node --test tests/*.test.js",
+    "test:deno": "deno test --allow-read test-deno.ts",
+    "lint": "echo 'Linting would go here - consider adding eslint'",
+    "build": "echo 'No build step required for this package'",
+    "example": "node example.js",
+    "example:deno": "deno run --allow-read --allow-net example-deno.ts"
   },
   "keywords": [
     "asset-loader",
@@ -18,16 +23,20 @@
     "overrides",
     "universal-loader"
   ],
-  "author": "MieWeb",
+  "author": "Medical Informatics Engineering, Inc.",
   "license": "MPL-2.0",
   "engines": {
     "node": ">=16.0.0"
   },
   "dependencies": {
-    "mongodb": "^6.17.0"
+    "mongodb": "^6.17.0",
+    "pino": "^9.4.0"
   },
   "peerDependenciesMeta": {
     "mongodb": {
+      "optional": true
+    },
+    "pino": {
       "optional": true
     }
   }
