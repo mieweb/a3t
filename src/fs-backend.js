@@ -5,6 +5,7 @@
 
 const fs = require('fs').promises;
 const path = require('path');
+const { logBackend } = require('./logging');
 
 let fsBackend = null;
 let assetsRootPath = 'assets';
@@ -29,12 +30,16 @@ class NodeFsBackend {
         throw new Error('Path traversal not allowed');
       }
       
-      return await fs.readFile(fullPath, 'utf8');
+      const content = await fs.readFile(fullPath, 'utf8');
+      logBackend('node-fs', 'readAsset', key, true);
+      return content;
     } catch (error) {
+      const success = false;
       if (error.code === 'ENOENT') {
+        logBackend('node-fs', 'readAsset', key, success);
         return null; // File not found
       }
-      console.warn('a3t: Filesystem read error:', error.message);
+      logBackend('node-fs', 'readAsset', key, success, error);
       return null;
     }
   }
@@ -51,12 +56,16 @@ class NodeFsBackend {
         throw new Error('Path traversal not allowed');
       }
       
-      return await fs.readFile(fullPath);
+      const buffer = await fs.readFile(fullPath);
+      logBackend('node-fs', 'readBinaryAsset', key, true);
+      return buffer;
     } catch (error) {
+      const success = false;
       if (error.code === 'ENOENT') {
+        logBackend('node-fs', 'readBinaryAsset', key, success);
         return null; // File not found
       }
-      console.warn('a3t: Filesystem read error:', error.message);
+      logBackend('node-fs', 'readBinaryAsset', key, success, error);
       return null;
     }
   }
@@ -73,8 +82,11 @@ class MeteorAssetsBackend {
         return null;
       }
       
-      return Assets.getText(key);
+      const content = Assets.getText(key);
+      logBackend('meteor-assets', 'readAsset', key, true);
+      return content;
     } catch (error) {
+      logBackend('meteor-assets', 'readAsset', key, false, error);
       return null; // Asset not found or error
     }
   }
@@ -86,8 +98,11 @@ class MeteorAssetsBackend {
         return null;
       }
       
-      return Assets.getBinary(key);
+      const buffer = Assets.getBinary(key);
+      logBackend('meteor-assets', 'readBinaryAsset', key, true);
+      return buffer;
     } catch (error) {
+      logBackend('meteor-assets', 'readBinaryAsset', key, false, error);
       return null; // Asset not found or error
     }
   }
