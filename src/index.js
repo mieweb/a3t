@@ -7,8 +7,17 @@ const { setA3tContext, getA3tContext } = require('./context');
 const { clearCache, getCacheStats } = require('./cache');
 const { setDbBackend, setMongoDbBackend, getDbBackend } = require('./db-backend');
 const { setFsBackend, setNodeFsBackend, setMeteorAssetsBackend, autoDetectFsBackend, getFsBackend } = require('./fs-backend');
+const { GitFsBackend } = require('./git-backend');
 const { resolveAsset, resolveAssets } = require('./resolver');
 const { initLogging, getLogger } = require('./logging');
+const { 
+  registerProvider, 
+  getProvider, 
+  setDefaultProvider, 
+  getSecret, 
+  setSecret, 
+  clearMemorySecrets 
+} = require('./secret-store');
 
 /**
  * Get an asset using the a3t hierarchical resolution
@@ -85,7 +94,9 @@ function init(config = {}) {
   
   // Set up filesystem backend if provided
   if (config.fs) {
-    if (config.fs.rootPath) {
+    if (config.fs.git) {
+      setGitFsBackend(config.fs.git);
+    } else if (config.fs.rootPath) {
       setNodeFsBackend(config.fs.rootPath);
     } else if (config.fs.meteor) {
       setMeteorAssetsBackend();
@@ -101,6 +112,24 @@ function init(config = {}) {
   if (config.context) {
     setA3tContext(config.context);
   }
+}
+
+/**
+ * Set Git filesystem backend with repository configuration
+ * @param {Object} config - Git configuration
+ * @param {string} config.repoUrl - Git repository URL
+ * @param {string} config.branch - Branch to checkout (default: 'main')
+ * @param {string} config.tag - Tag to checkout (takes precedence over branch)
+ * @param {string} config.commit - Commit to checkout (takes precedence over tag/branch)
+ * @param {string} config.scope - Cache scope: 'workspace' or 'user' (default: 'workspace')
+ * @param {string} config.cachePath - Local cache path (default: '.a3t-git-cache')
+ * @param {Object} config.credentials - Git credentials (optional)
+ * @param {boolean} config.autoFetch - Auto-fetch updates (default: true)
+ * @param {number} config.fetchInterval - Fetch interval in ms (default: 300000)
+ */
+function setGitFsBackend(config) {
+  const gitBackend = new GitFsBackend(config);
+  setFsBackend(gitBackend);
 }
 
 /**
@@ -136,6 +165,7 @@ const a3t = {
   setFsBackend,
   setNodeFsBackend,
   setMeteorAssetsBackend,
+  setGitFsBackend,
   autoDetectFsBackend,
   getFsBackend,
   
@@ -146,6 +176,16 @@ const a3t = {
   // Logging
   initLogging,
   getLogger,
+  
+  // Secret management
+  secretStore: {
+    registerProvider,
+    getProvider,
+    setDefaultProvider,
+    getSecret,
+    setSecret,
+    clearMemorySecrets,
+  },
 };
 
 // Auto-initialize with default settings

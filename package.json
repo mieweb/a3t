@@ -12,6 +12,7 @@
     "lint": "echo 'Linting would go here - consider adding eslint'",
     "build": "echo 'No build step required for this package'",
     "example": "node example.js",
+    "example:git": "node example-git.js",
     "example:deno": "deno run --allow-read --allow-net example-deno.ts"
   },
   "keywords": [
@@ -21,7 +22,10 @@
     "templates",
     "caching",
     "overrides",
-    "universal-loader"
+    "universal-loader",
+    "git-integration",
+    "secret-store",
+    "distributed-assets"
   ],
   "author": "Medical Informatics Engineering, Inc.",
   "license": "MPL-2.0",
@@ -30,7 +34,8 @@
   },
   "dependencies": {
     "mongodb": "^6.17.0",
-    "pino": "^9.4.0"
+    "pino": "^9.4.0",
+    "simple-git": "^3.28.0"
   },
   "peerDependenciesMeta": {
     "mongodb": {

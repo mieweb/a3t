@@ -8,6 +8,7 @@ export interface A3tContext {
   system?: string;
   buildHash?: string;
   nonce?: number;
+  user?: string; // Added for Git backend user-level caching
   [key: string]: any; // Allow additional context fields
 }
 
@@ -18,6 +19,24 @@ export interface DbBackend {
 export interface FsBackend {
   readAsset(key: string): Promise<string | null>;
   readBinaryAsset(key: string): Promise<Buffer | null>;
+}
+
+export interface GitCredentials {
+  username?: string;
+  password?: string;
+  token?: string;
+}
+
+export interface GitFsConfig {
+  repoUrl: string;
+  branch?: string;
+  tag?: string;
+  commit?: string;
+  scope?: 'workspace' | 'user';
+  cachePath?: string;
+  credentials?: GitCredentials;
+  autoFetch?: boolean;
+  fetchInterval?: number;
 }
 
 export interface MongoDbConfig {
@@ -40,6 +59,7 @@ export interface A3tConfig {
     rootPath?: string;
     meteor?: boolean;
     backend?: FsBackend;
+    git?: GitFsConfig;
   };
   context?: A3tContext;
   logging?: LoggingConfig;
@@ -48,6 +68,21 @@ export interface A3tConfig {
 export interface CacheStats {
   size: number;
   keys: string[];
+}
+
+export interface SecretProvider {
+  getSecret(key: string): Promise<string | null>;
+  setSecret?(key: string, value: string): Promise<void>;
+  isAvailable(): Promise<boolean>;
+}
+
+export interface SecretStore {
+  registerProvider(name: string, provider: SecretProvider): void;
+  getProvider(name: string): SecretProvider | null;
+  setDefaultProvider(provider: string | SecretProvider): void;
+  getSecret(key: string): Promise<string | null>;
+  setSecret(key: string, value: string): Promise<boolean>;
+  clearMemorySecrets(): void;
 }
 
 export interface A3t {
@@ -70,6 +105,7 @@ export interface A3t {
   setFsBackend(backend: FsBackend): void;
   setNodeFsBackend(rootPath?: string): void;
   setMeteorAssetsBackend(): void;
+  setGitFsBackend(config: GitFsConfig): void;
   autoDetectFsBackend(): void;
   getFsBackend(): FsBackend | null;
   
@@ -80,6 +116,9 @@ export interface A3t {
   // Logging
   initLogging(config?: LoggingConfig): void;
   getLogger(): any;
+  
+  // Secret management
+  secretStore: SecretStore;
 }
 
 declare const a3t: A3t;
